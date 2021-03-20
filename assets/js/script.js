@@ -2,6 +2,11 @@
 
 //api.openweathermap.org/data/2.5/weather?q={city name}&appid={API key}
 //https://api.openweathermap.org/data/2.5/forecast?q=torrance&appid=95b9bfee3c4c33dbfa36d6592b554c5a
+const FORECAST_DAYS = 5;
+
+function displayToday(forecast){
+    
+}
 
 /**
  * Converts temperature unit from Kelvin to Fahrenheit 
@@ -30,33 +35,39 @@ function checkConnection() {
  * The data includes: date, weather, temperature in F, humidity, and wind speed.
  */
 function fetchWeatherData(apiURL) {
-    var today = {
-        dateString: '' ,
-        weatherIcon: '',
-        temperatureF: 25.00,
-        humidity: 0,
-        windSpeed: -1
+    //object that stores all 5 days worth of weather data
+    let forecast = {
+        dateString: [] ,
+        weatherIcon: [],
+        temperatureF: [],
+        humidity: [],
+        windSpeed: []
     };
 
-    
+    //fetch the data from the OpenWeatherMap api and 
     fetch(apiURL)
         .then(function(response) {
             return response.json();
         })
         .then(function(response){
-            today.dateString = moment.unix(response.list[0].dt).format("M/DD/YYYY"); //convert unix time to date string
-            today.weatherIcon = response.list[0].weather[0].icon;
-            today.temperatureF = convertKelvinToF(response.list[0].main.temp);
-            today.humidity = response.list[0].main.humidity;
-            today.windSpeed = response.list[0].wind.speed;
-            console.log(today.dateString);
-            console.log(today.weatherIcon);
-            console.log(today.temperatureF);
-            console.log(today.humidity);
-            console.log(today.windSpeed);
-
+            for(var i = 0; i < FORECAST_DAYS; i++){
+                forecast.dateString.push(moment.unix(response.list[0].dt).format("M/DD/YYYY")); //convert unix time to date string
+                forecast.weatherIcon.push(response.list[0].weather[0].icon);
+                forecast.temperatureF.push(convertKelvinToF(response.list[0].main.temp));
+                forecast.humidity.push(response.list[0].main.humidity);
+                forecast.windSpeed.push(response.list[0].wind.speed);
+            }
+            // displayToday(forecast);
+            for(var i = 1; i < FORECAST_DAYS ; i++){
+                console.log(forecast.dateString[i])
+                console.log(forecast.weatherIcon[i])
+                console.log(forecast.temperatureF[i])
+                console.log(forecast.humidity[i])
+                console.log(forecast.windSpeed[i])
+            }
         });
 };
+
 
 
 
