@@ -9,19 +9,27 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/open-iconic/1.1.1/font/css/open-iconic-bootstrap.min.css" integrity="sha512-UyNhw5RNpQaCai2EdC+Js0QL4RlVmiq41DkmCJsRV3ZxipG2L0HhTqIf/H9Hp8ez2EnFlkBnjRGJU2stW3Lj+w==" crossorigin="anonymous" />
     <link rel="stylesheet" href="./assets/css/style.css">
 </head>
+
 <body>
 
     <header class="w-auto text-white bg-dark d-flex justify-content-center">
         <h1>Weather Dashboard</h1>
     </header>
 
-    <aside class='w-25 p-3 d-flex flex-column h-100 bg-light'>
-        <h3 class='w-auto'>Search for a City:</h3>
-        <form class="form-inline my-2 my-lg-0 d-flex ">
-            <input class="search form-control mr-sm-2" type="search" placeholder="Enter City Name" aria-label="Search">
-            <button class="btn btn-outline-success my-2 my-sm-0 bg-primary" type="submit" ><span class="text-white oi oi-magnifying-glass"></span></button>
-        </form>
-    </aside>
+    <div class='d-flex'>
+        <aside class='w-25 p-3 d-flex flex-column h-100 bg-light'>
+            <h3 class='w-auto'>Search for a City:</h3>
+            <form class="form-inline my-2 my-lg-0 d-flex ">
+                <input class="search form-control mr-sm-2" type="search" placeholder="Enter City Name" aria-label="Search">
+                <button class="btn btn-outline-success my-2 my-sm-0 bg-primary" type="submit" ><span class="text-white oi oi-magnifying-glass"></span></button>
+            </form>
+        </aside>
+    
+        <main class='m-3 w-75 container'>
+            <div class='today d-flex row'></div>
+            <div class='future row container'></div>
+        </main>
+    </div>
     
     <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js" integrity="sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0" crossorigin="anonymous"></script>
