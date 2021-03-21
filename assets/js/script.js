@@ -1,4 +1,12 @@
 //https://api.openweathermap.org/data/2.5/forecast?q=torrance&appid=95b9bfee3c4c33dbfa36d6592b554c5a
+
+/**
+ * @author Ray Takemura
+ * @date 3/20/2021
+ * @assignment Challenge 06 Weather Dashboard
+ */
+
+// Global variables:
 // Number of days that is going to be forecasted to the UI
 const FORECAST_DAYS = 5;
 // UV Scale: 0-2 is low, 3-5 is moderate, 6-7 is high, 8-10 is very high, and 11+ is extreme.
@@ -18,7 +26,7 @@ var weatherHistory = {
  */
 function displayFuture(forecast, index) {
     // Create elements that goes into a card
-    var $forecast = $('<h4>').text(forecast.dateString[index]);
+    var $date = $('<h4>').text(forecast.dateString[index]);
 
     var icon = "http://openweathermap.org/img/w/" + forecast.weatherIcon[index] + ".png";
     var $iconEl = $('<img>').attr('src', icon).addClass('w-25 py-3');
@@ -30,7 +38,7 @@ function displayFuture(forecast, index) {
     // Create wrapper that holds the card data and shape.
     var $castCardBody = $('<div>')
         .addClass('rounded bg-primary text-white p-3 d-flex flex-column')
-        .append($forecast)
+        .append($date)
         .append($iconEl)
         .append($tempEl)
         .append($humidityEl);
@@ -149,6 +157,10 @@ function checkConnection(cityName) {
         });
 };
 
+/**
+ * Displays the search history on the UI below the search bar.
+ * Every time something is searched, the previous history is removed and the newest version is displayed.
+ */
 function displaySearchHistory() {
     $('.w-history').remove();
 
@@ -156,12 +168,16 @@ function displaySearchHistory() {
 
     console.log(weatherHistory);
     $historyContainer = $('<div>').addClass('d-flex flex-column border rounded w-history')
+
+    if(!weatherHistory){
+        return;
+    }
     for (var i = weatherHistory.cityNames.length - 1; i >= 0; i--){
         var $cityName = $('<span>')
             .addClass('px-5 mx-auto')
             .text(weatherHistory.cityNames[i]);
         var $border = $('<div>')
-            .addClass('py-3 border-bottom')
+            .addClass('py-3 border-bottom city-name')
             .append($cityName);
         $historyContainer.append($border);
     }
@@ -169,8 +185,16 @@ function displaySearchHistory() {
 };
 
 
-
+/**
+ * Save the searched city's name into the global array and up to the local storage.
+ * @param {string} cityName The name of the city searched
+ */
 function saveSearch(cityName) {
+    if (!weatherHistory){
+        weatherHistory = {
+            cityNames: []
+        }
+    }
     weatherHistory.cityNames.push(cityName);
     localStorage.setItem('searchHistoryRT', JSON.stringify(weatherHistory));
 };
@@ -266,6 +290,9 @@ $('body').submit(function (event){
 // button click listener
 // search the array by using the id of button pressed
 // pass the array info and run 
-
+$('aside').on('click', '.city-name', function (){
+    var cityName = $(this).children().text();
+    checkConnection(cityName)
+})
 
 displaySearchHistory();
