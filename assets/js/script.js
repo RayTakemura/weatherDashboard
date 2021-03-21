@@ -2,10 +2,39 @@
 
 //api.openweathermap.org/data/2.5/weather?q={city name}&appid={API key}
 //https://api.openweathermap.org/data/2.5/forecast?q=torrance&appid=95b9bfee3c4c33dbfa36d6592b554c5a
-const FORECAST_DAYS = 6;
+const FORECAST_DAYS = 5;
 // UV Scale
 const UV_SCALE = [3, 6, 8, 11]
 
+
+function displayFuture(forecast, index) {
+    var $forecast = $('<h4>').text(forecast.dateString[index]);
+
+    var icon = "http://openweathermap.org/img/w/" + forecast.weatherIcon[index] + ".png";
+    var $iconEl = $('<img>').attr('src', icon).addClass('w-25 py-3');
+
+    var $tempEl = $('<span>').text('Temp: ' + forecast.temperatureF[index] + '\u00B0F');
+
+    var $humidityEl = $('<span>').text('Humidity:' + forecast.humidity[index] + '%').addClass('py-3');
+
+    var $castCardBody = $('<div>')
+        .addClass('rounded bg-primary text-white p-3 d-flex flex-column')
+        .append($forecast)
+        .append($iconEl)
+        .append($tempEl)
+        .append($humidityEl);
+    var $castCard = $('<div>')
+        .addClass('col-3')
+        .append($castCardBody);
+
+    $('.forecasts').append($castCard);
+}
+
+/**
+ * Checks how strong the UV is and gives a color according to its severity
+ * @param {number} uvIndex A value that shows how strong the UV radiation is
+ * @returns String of color of how strong the UV radiation is
+ */
 function checkUVSeverity(uvIndex){
     if(uvIndex < UV_SCALE[0]){
         return 'green';
@@ -14,9 +43,9 @@ function checkUVSeverity(uvIndex){
     } else if (uvIndex < UV_SCALE[2]) {
         return 'orange';
     } else if (uvIndex < UV_SCALE[3]){
-        return 'red'
+        return 'red';
     } else {
-        return 'purple'
+        return 'purple';
     }
 }
 
@@ -87,12 +116,12 @@ function displayToday(forecast){
 function convertKelvinToF(tempK){
     var tempC = (tempK - 273.15); //convert Kelvin to Celcius
     var tempF = tempC * (9/5) + 32; //convert Celcius to Fahrenheit
-    tempF = Math.round((tempF + Number.EPSILON) * 100) / 100
+    tempF = Math.round((tempF + Number.EPSILON) * 100) / 100;
     return tempF;
 }
 
 /**
- * Checks the connection to the api.
+ * Checks the connection to the api then passes the api URL to fetchWeatherData function
  */
 function checkConnection() { 
     var cityName = $('.search').val();
@@ -101,12 +130,12 @@ function checkConnection() {
         .done(function(){
             fetchWeatherData(apiURL);
         }).fail(function() {
-            alert('Error')
+            alert('Error');
         });
 };
 
 /**
- * Fetches data from the Open Weather Map API.
+ * Fetches data from the Open Weather Map API. The URL is passed on from the checkConnection function
  * The data includes: date, weather, temperature in F, humidity, and wind speed.
  */
 function fetchWeatherData(apiURL) {
@@ -129,24 +158,21 @@ function fetchWeatherData(apiURL) {
             return response.json();
         })
         .then(function(response){
-            for(var i = 0; i < FORECAST_DAYS ; i++){
+            // This api returns 5 days worth of forecast with 3 hour intervals. 
+            // Each day includes 8 intervals
+            for (var i = 0; i < (FORECAST_DAYS * 8); i = (i + 8)){
                 forecast.dateString.push(moment.unix(response.list[i].dt).format("M/DD/YYYY")); //convert unix time to date string
                 forecast.weatherIcon.push(response.list[i].weather[0].icon);
                 forecast.temperatureF.push( convertKelvinToF(response.list[i].main.temp) );
                 forecast.humidity.push(response.list[i].main.humidity);
             }
+            
             forecast.windSpeed = response.list[0].wind.speed;
             forecast.cityName = response.city.name;
             forecast.latitude = response.city.coord.lat;
             forecast.longitude = response.city.coord.lon;
             
-            for(var i = 1; i < FORECAST_DAYS ; i++){
-                console.log(forecast.dateString[i])
-                console.log(forecast.weatherIcon[i])
-                console.log(forecast.temperatureF[i])
-                console.log(forecast.humidity[i])
-            }
-            console.log(forecast.windSpeed)
+            console.log(forecast.windSpeed);
             console.log(forecast.latitude);
             console.log(forecast.longitude);
             console.log(forecast.cityName);
@@ -160,18 +186,20 @@ function fetchWeatherData(apiURL) {
             forecast.uvi = UVresponse.current.uvi;
             console.log(forecast.uvi);
             displayToday(forecast);
+
+            var $futureContainer = $('.future');
+            var $h3RowEl = $('<div>').addClass('row');
+            var $h3El = $('<h3>').text('4-Day Forecast:').addClass('p-2');
+            $h3RowEl.append($h3El);
+            $futureContainer.append($h3RowEl);
+            var $forecastRow = $('<div>').addClass('row forecasts');
+            $futureContainer.append($forecastRow);
+            for (var i = 1; i < FORECAST_DAYS; i++){
+                console.log(forecast.dateString[i]);
+                displayFuture(forecast, i);
+            }
         });
 };
-
-
-
-
-
-// function buttonHander(event){
-//     if (event.target.matches('.btn')){
-//         fetchWeatherData(event);
-//     }
-// }
 
 $('body').submit(function (event){
     event.preventDefault();
