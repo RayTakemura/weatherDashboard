@@ -1,13 +1,23 @@
-// weather apikey : '95b9bfee3c4c33dbfa36d6592b554c5a'
-
-//api.openweathermap.org/data/2.5/weather?q={city name}&appid={API key}
 //https://api.openweathermap.org/data/2.5/forecast?q=torrance&appid=95b9bfee3c4c33dbfa36d6592b554c5a
+// Number of days that is going to be forecasted to the UI
 const FORECAST_DAYS = 5;
-// UV Scale
-const UV_SCALE = [3, 6, 8, 11]
+// UV Scale: 0-2 is low, 3-5 is moderate, 6-7 is high, 8-10 is very high, and 11+ is extreme.
+const UV_SCALE = [3, 6, 8, 11];
+// A variable that is used to check if any DOM elements needs to be deleted before projecting a new forecast
+var projecting = false;
+// The search history.
+var weatherHistory = {
+    cityNames: []
+};
 
 
+/**
+ * Display future forecast in a card.
+ * @param {forecast} forecast Holds all the required weather data to present to the user.
+ * @param {number} index The number of index of each array 
+ */
 function displayFuture(forecast, index) {
+    // Create elements that goes into a card
     var $forecast = $('<h4>').text(forecast.dateString[index]);
 
     var icon = "http://openweathermap.org/img/w/" + forecast.weatherIcon[index] + ".png";
@@ -17,18 +27,21 @@ function displayFuture(forecast, index) {
 
     var $humidityEl = $('<span>').text('Humidity:' + forecast.humidity[index] + '%').addClass('py-3');
 
+    // Create wrapper that holds the card data and shape.
     var $castCardBody = $('<div>')
         .addClass('rounded bg-primary text-white p-3 d-flex flex-column')
         .append($forecast)
         .append($iconEl)
         .append($tempEl)
         .append($humidityEl);
+
+    // Column wrapper that margins the card from the other cards
     var $castCard = $('<div>')
         .addClass('col-3')
         .append($castCardBody);
 
     $('.forecasts').append($castCard);
-}
+};
 
 /**
  * Checks how strong the UV is and gives a color according to its severity
@@ -47,10 +60,10 @@ function checkUVSeverity(uvIndex){
     } else {
         return 'purple';
     }
-}
+};
 
 /**
- * 
+ * Display today's forecast to the UI
  * @param {forecast} forecast Forecast object that contains all information about the days
  */
 function displayToday(forecast){
@@ -64,7 +77,7 @@ function displayToday(forecast){
         .addClass('row p-2')
         .append($h2El);
     
-    //create spans. Each spans are wrapped with row
+    //create spans that holds text of weather data to present to the UI. Each spans are wrapped with row
     var $tempFEl = $('<span>').text('Temperature: ' + forecast.temperatureF[0] + '\u00B0F').addClass('font');
     var $tempRowEl = $('<div>')
         .addClass('row p-2')
@@ -80,6 +93,7 @@ function displayToday(forecast){
         .addClass('row p-2')
         .append($windSpeedEl);
     
+    //Create UV index with background color to indicate severity of UV radiation
     var uvSeverity = checkUVSeverity(forecast.uvi);
     var $uvEl = $('<span>').text('UV Index: ')
     var $uvValEl = $('<span>').text(forecast.uvi);
@@ -95,7 +109,8 @@ function displayToday(forecast){
         .addClass('row p-2')
         .append($uvEl);
     
-    var $todayContainerEl = $('<div>').addClass('border rounded p-3 w-100 container')
+    // append everything above to a container so that they stay in a row
+    var $todayContainerEl = $('<div>').addClass('border rounded p-3 w-100 container removable')
     $todayContainerEl
         .append($titleRowEl)
         .append($tempRowEl)
@@ -103,10 +118,9 @@ function displayToday(forecast){
         .append($wspeedRowEl)
         .append($uvRow);
         
+    // append the container above to the existing div element in main section
     $('.today').append($todayContainerEl);
-    
-
-}
+};
 
 /**
  * Converts temperature unit from Kelvin to Fahrenheit 
@@ -118,27 +132,61 @@ function convertKelvinToF(tempK){
     var tempF = tempC * (9/5) + 32; //convert Celcius to Fahrenheit
     tempF = Math.round((tempF + Number.EPSILON) * 100) / 100;
     return tempF;
-}
+};
 
 /**
  * Checks the connection to the api then passes the api URL to fetchWeatherData function
+ * @param {String} cityName The name of city that is going to searched
  */
-function checkConnection() { 
-    var cityName = $('.search').val();
+function checkConnection(cityName) { 
     var apiURL = 'https://api.openweathermap.org/data/2.5/forecast?q=' + cityName + '&appid=95b9bfee3c4c33dbfa36d6592b554c5a';
     $.ajax(apiURL)
         .done(function(){
             fetchWeatherData(apiURL);
+            projecting = true;
         }).fail(function() {
             alert('Error');
         });
 };
+
+function displaySearchHistory() {
+    $('.w-history').remove();
+
+    weatherHistory = JSON.parse(localStorage.getItem('searchHistoryRT'));
+
+    console.log(weatherHistory);
+    $historyContainer = $('<div>').addClass('d-flex flex-column border rounded w-history')
+    for (var i = weatherHistory.cityNames.length - 1; i >= 0; i--){
+        var $cityName = $('<span>')
+            .addClass('px-5 mx-auto')
+            .text(weatherHistory.cityNames[i]);
+        var $border = $('<div>')
+            .addClass('py-3 border-bottom')
+            .append($cityName);
+        $historyContainer.append($border);
+    }
+    $('.search-history').append($historyContainer);
+};
+
+
+
+function saveSearch(cityName) {
+    weatherHistory.cityNames.push(cityName);
+    localStorage.setItem('searchHistoryRT', JSON.stringify(weatherHistory));
+};
+
 
 /**
  * Fetches data from the Open Weather Map API. The URL is passed on from the checkConnection function
  * The data includes: date, weather, temperature in F, humidity, and wind speed.
  */
 function fetchWeatherData(apiURL) {
+
+    //check if anything is being projected currently, and if it is, delete them.
+    if(projecting){
+        $('.removable').remove();
+    }
+
     //object that stores all 5 days worth of weather data
     let forecast = {
         dateString: [] ,
@@ -167,15 +215,19 @@ function fetchWeatherData(apiURL) {
                 forecast.humidity.push(response.list[i].main.humidity);
             }
             
+            // obtain data that's used for other purposes
             forecast.windSpeed = response.list[0].wind.speed;
             forecast.cityName = response.city.name;
             forecast.latitude = response.city.coord.lat;
             forecast.longitude = response.city.coord.lon;
+
+            // store searched city name to the history array and update local storage
+            saveSearch(forecast.cityName);
             
-            console.log(forecast.windSpeed);
-            console.log(forecast.latitude);
-            console.log(forecast.longitude);
-            console.log(forecast.cityName);
+            // display search history
+            displaySearchHistory();
+            
+            // fetch through a different URL for today's UV index
             apiForUV = 'https://api.openweathermap.org/data/2.5/onecall?lat=' + forecast.latitude + '&lon=' + forecast.longitude + '&appid=95b9bfee3c4c33dbfa36d6592b554c5a';
             return fetch(apiForUV);
         })
@@ -183,19 +235,23 @@ function fetchWeatherData(apiURL) {
             return UVresponse.json();
         })
         .then(function(UVresponse){
+            // obtain UV index and display today's weather
             forecast.uvi = UVresponse.current.uvi;
-            console.log(forecast.uvi);
             displayToday(forecast);
 
+            // Create title '4-Day forecast' 
             var $futureContainer = $('.future');
-            var $h3RowEl = $('<div>').addClass('row');
-            var $h3El = $('<h3>').text('4-Day Forecast:').addClass('p-2');
+            var $h3RowEl = $('<div>').addClass('row removable');
+            var $h3El = $('<h3>')
+                .text('4-Day Forecast:')
+                .addClass('p-2');
             $h3RowEl.append($h3El);
             $futureContainer.append($h3RowEl);
-            var $forecastRow = $('<div>').addClass('row forecasts');
+
+            // Create an element that holds all the cards together in one row.
+            var $forecastRow = $('<div>').addClass('row forecasts removable');
             $futureContainer.append($forecastRow);
-            for (var i = 1; i < FORECAST_DAYS; i++){
-                console.log(forecast.dateString[i]);
+            for (var i = 1; i < FORECAST_DAYS; i++){ //display future forecasts
                 displayFuture(forecast, i);
             }
         });
@@ -203,6 +259,13 @@ function fetchWeatherData(apiURL) {
 
 $('body').submit(function (event){
     event.preventDefault();
-    checkConnection();
+    var cityName = $('.search').val();
+    checkConnection(cityName);
 });
 
+// button click listener
+// search the array by using the id of button pressed
+// pass the array info and run 
+
+
+displaySearchHistory();
