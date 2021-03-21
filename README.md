@@ -18,6 +18,7 @@ To create a website that allows travelers to check the weather of a city. This w
 * Server side API (OpenWeatherMap)
 
 ## Website
+https://raytakemura.github.io/weatherDashboard/.
 
 ## Contribution
 Ray Takemura
