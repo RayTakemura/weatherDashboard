@@ -23,8 +23,4 @@ https://raytakemura.github.io/weatherDashboard/.
 ## Contribution
 Ray Takemura
 
-<<<<<<< HEAD
 &copy; Ray Takemura
-=======
-&copy; Ray Takemura
->>>>>>> origin
