@@ -91,7 +91,7 @@ function displayToday(forecast){
         .addClass('row p-2')
         .append($tempFEl);
 
-    var $humidityEl = $('<span>').text('Humidity: ' + forecast.humidity + '%');
+    var $humidityEl = $('<span>').text('Humidity: ' + forecast.humidity[0] + '%');
     var $humidityRowEl = $('<div>')
         .addClass('row p-2')
         .append($humidityEl);
@@ -132,7 +132,7 @@ function displayToday(forecast){
 
 /**
  * Converts temperature unit from Kelvin to Fahrenheit 
- * @param {*} tempK Temperature in Kelvin
+ * @param {number} tempK Temperature in Kelvin
  * @returns The given temperature in Kelvin
  */
 function convertKelvinToF(tempK){
@@ -148,6 +148,7 @@ function convertKelvinToF(tempK){
  */
 function checkConnection(cityName) { 
     var apiURL = 'https://api.openweathermap.org/data/2.5/forecast?q=' + cityName + '&appid=95b9bfee3c4c33dbfa36d6592b554c5a';
+    
     $.ajax(apiURL)
         .done(function(){
             fetchWeatherData(apiURL);
@@ -195,8 +196,10 @@ function saveSearch(cityName) {
             cityNames: []
         }
     }
-    weatherHistory.cityNames.push(cityName);
-    localStorage.setItem('searchHistoryRT', JSON.stringify(weatherHistory));
+    if (!weatherHistory.cityNames.includes(cityName)){
+        weatherHistory.cityNames.push(cityName);
+        localStorage.setItem('searchHistoryRT', JSON.stringify(weatherHistory));
+    }
 };
 
 
@@ -293,6 +296,6 @@ $('body').submit(function (event){
 $('aside').on('click', '.city-name', function (){
     var cityName = $(this).children().text();
     checkConnection(cityName)
-})
+});
 
 displaySearchHistory();
